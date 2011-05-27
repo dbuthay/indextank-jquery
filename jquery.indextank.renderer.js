@@ -24,20 +24,36 @@
             });
 
             base.$el.bind("Indextank.AjaxSearch.success", function(e, data) {
+                base.fullRender(data);
+
+
+                /*
                 base.$el.html("");
                 $(data.results).each( function (i, item) {
                     var r = base.options.format(item);
                     r.appendTo(base.$el);
                 });
+                */
+
+
                 base.$el.css({opacity: 1});
             });
             
         };
         
-        // Sample Function, Uncomment to use
-        // base.functionName = function(paramaters){
-        // 
-        // };
+        // clear and append
+        base.fullRender = function (data) {
+            base.$el.html("");
+            base.appendRender(data);
+        };
+
+        base.appendRender = function (data) {
+            base.$el.append( $(data.results).map( base.options.format ));
+        };
+
+        base.prependRender = function (data) {
+            base.$el.prepend( $(data.results).map( base.options.format ) );
+        };
         
         // Run initializer
         base.init();

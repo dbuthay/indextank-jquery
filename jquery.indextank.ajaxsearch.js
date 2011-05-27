@@ -34,61 +34,77 @@
             base.$el.bind( "Indextank.AjaxSearch.runQuery", function (event, term, start, rsLength ) {
                 base.runQuery(term, start, rsLength);
             });
+
+            // make it possible to re run the query. Useful to get live updates
+            base.$el.bind( "Indextank.AjaxSearch.reRunQuery", function () {
+                base.reRunQuery();
+            });
+
         };
         
-        // Sample Function, Uncomment to use
-        // base.functionName = function(paramaters){
-        // 
-        // };
 
-            base.runQuery = function( term, start, rsLength ) {
-                // don't run a query twice
-                var query = base.options.rewriteQuery( term || base.el.value );
-                start = start || 0;
-                rsLength = rsLength || 10;
+        // re runs the last executed query
+        base.reRunQuery = function() {
+            base._executeQuery(base.query, base.start, base.rsLength);
+        };
 
-                if (base.query == query && base.start == start && base.rsLength == rsLength ) {
-                    return;
-                } 
-                
-                // if we are running a query, an old one makes no sense.
-                if (base.xhr != undefined ) {
-                    base.xhr.abort();
-                }
-               
+        // runs a new query. Does NOTHING if the query parameters are the same
+        // as the previous query.
+        base.runQuery = function( term, start, rsLength ) {
+            // don't run a query twice
+            var query = base.options.rewriteQuery( term || base.el.value );
+            start = start || 0;
+            rsLength = rsLength || 10;
 
-                // remember the current running query
-                base.query = query;
-                base.start = start;
-                base.rsLength = rsLength;
-
-                base.options.listeners.trigger("Indextank.AjaxSearch.searching");
-                base.$el.trigger("Indextank.AjaxSearch.searching");
-
-
-                // run the query, with ajax
-                base.xhr = $.ajax( {
-                    url: base.ize.apiurl + "/v1/indexes/" + base.ize.indexName + "/search",
-                    dataType: "jsonp",
-                    data: { 
-                            "q": query, 
-                            "fetch": base.options.fields, 
-                            "snippet": base.options.snippets, 
-                            "function": base.options.scoringFunction,
-                            "start": start,
-                            "len": rsLength
-                          },
-                    success: function( data ) { 
-                                // Indextank API does not send the query, nor start or rsLength
-                                // I'll save the current query inside 'data',
-                                // so our listeners can use it.
-                                data.query = query;
-                                data.start = start;
-                                data.rsLength = rsLength;
-                                base.options.listeners.trigger("Indextank.AjaxSearch.success", data);
-                                }
-                } );
+            if (base.query == query && base.start == start && base.rsLength == rsLength ) {
+                return;
             } 
+            
+            base._executeQuery(query, start, rsLength);
+       };
+
+
+       // actually executes the query, and remembers it.
+       // you should NEVER call this method on your own
+       base._executeQuery = function( query, start, rsLength ) { 
+            // if we are running a query, an old one makes no sense.
+            if (base.xhr != undefined ) {
+                base.xhr.abort();
+            }
+           
+
+            // remember the current running query
+            base.query = query;
+            base.start = start;
+            base.rsLength = rsLength;
+
+            base.options.listeners.trigger("Indextank.AjaxSearch.searching");
+            base.$el.trigger("Indextank.AjaxSearch.searching");
+
+
+            // run the query, with ajax
+            base.xhr = $.ajax( {
+                url: base.ize.apiurl + "/v1/indexes/" + base.ize.indexName + "/search",
+                dataType: "jsonp",
+                data: { 
+                        "q": query, 
+                        "fetch": base.options.fields, 
+                        "snippet": base.options.snippets, 
+                        "function": base.options.scoringFunction,
+                        "start": start,
+                        "len": rsLength
+                      },
+                success: function( data ) { 
+                            // Indextank API does not send the query, nor start or rsLength
+                            // I'll save the current query inside 'data',
+                            // so our listeners can use it.
+                            data.query = query;
+                            data.start = start;
+                            data.rsLength = rsLength;
+                            base.options.listeners.trigger("Indextank.AjaxSearch.success", data);
+                            }
+            } );
+        } 
         
         // Run initializer
         base.init();
