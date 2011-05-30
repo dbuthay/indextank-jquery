@@ -73,14 +73,7 @@
                 base.xhr = $.ajax( {
                     url: base.ize.apiurl + "/v1/indexes/" + base.ize.indexName + "/search",
                     dataType: "jsonp",
-                    data: { 
-                            "q": options.query, 
-                            "fetch": options.fields, 
-                            "snippet": options.snippets, 
-                            "function": options.scoringFunction,
-                            "start": options.start,
-                            "len": options.rsLength
-                          },
+                    data: base.filterQueryParams( options ), 
                     success: function( data ) { 
                                 // Indextank API does not send the query, nor start or rsLength
                                 // I'll save the current query inside 'data',
@@ -104,6 +97,40 @@
             return true; 
 
         }
+
+
+        // makes sure that only parameters that Indextank API can accept 
+        // are present on the query
+        // IT DOES NOT PROVIDE DEFAULTS. Indextank.AjaxSearch.defaultOptions is meant to do that.
+        base.filterQueryParams = function (qp) { 
+            var filteredQp = {};
+           
+            // some translations first
+            filteredQp['q'] = qp.query ;
+            filteredQp['len'] = qp.rsLength;
+            filteredQp['fetch'] = qp.fields;
+            filteredQp['snippet'] = qp.snippets; //s at the end
+          
+            var valid_keys = ["q", "start", "len", "function", "fetch", "snippet", "category_filters"];
+            var valid_exps = ["var", "filter_docvar", "filter_function"];
+ 
+            for (p in qp) { 
+                if ($.inArray(p, valid_keys) != -1) {
+                    filteredQp[p] = qp[p];
+                    // continue ?
+                }
+
+                for (exp in valid_exps) {
+                    if (p.indexOf(exp) === 0 ) {
+                        filteredQp[p] = qp[p];
+                        break; // I really want to break here
+                    }
+                }
+            }
+            
+            return filteredQp; 
+        };
+
     
         // Run initializer
         base.init();
