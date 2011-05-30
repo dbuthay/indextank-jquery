@@ -20,13 +20,13 @@
            
             // make autocomplete trigger a query when suggestions appear
             base.$el.bind( "Indextank.Autocomplete.success", function (event, suggestions ) {
-                base.$el.trigger( "Indextank.AjaxSearch.runQuery", suggestions );
+                base.$el.trigger( "Indextank.AjaxSearch.runQuery", event, { query: suggestions });
             });
             
             // make autocomplete focus trigger an AjaxSearch, only if requested
             if (base.options.focusTriggersSearch) { 
                 base.$el.bind( "autocompletefocus", function (event, ui) {
-                    base.$el.trigger( "Indextank.AjaxSearch.runQuery", ui.item.value );
+                    base.$el.trigger( "Indextank.AjaxSearch.runQuery", { query: ui.item.value } );
                 }); 
             } 
 
