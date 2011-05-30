@@ -32,8 +32,8 @@
 
 
             // make it possible for other to trigger an ajax search
-            base.$el.bind( "Indextank.AjaxSearch.runQuery", function (event, term, start, rsLength ) {
-                base.runQuery(term, start, rsLength);
+            base.$el.bind( "Indextank.AjaxSearch.runQuery", function (event, options) {
+                base.runQuery( options );
             });
         };
         
