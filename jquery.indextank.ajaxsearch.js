@@ -19,6 +19,7 @@
             
             base.options = $.extend({},$.Indextank.AjaxSearch.defaultOptions, options);
             base.xhr = undefined;
+            base.queryData = {};
             
             
             // TODO: make sure ize is an Indextank.Ize element somehow
@@ -41,13 +42,17 @@
         // 
         // };
 
-            base.runQuery = function( term, start, rsLength ) {
-                // don't run a query twice
-                var query = base.options.rewriteQuery( term || base.el.value );
-                start = start || base.options.start;
-                rsLength = rsLength || base.options.rsLength;
+            base.runQuery = function( options ) {
 
-                if (base.query == query && base.start == start && base.rsLength == rsLength ) {
+                // calculate options, using baes.options as default.
+                options = $.extend({}, base.options, options);
+
+
+                // don't run a query twice
+                options.query = options.rewriteQuery( options.query || base.el.value );
+                
+
+                if (base.areEqual(options, base.queryData)) { 
                     return;
                 } 
                 
@@ -58,9 +63,7 @@
                
 
                 // remember the current running query
-                base.query = query;
-                base.start = start;
-                base.rsLength = rsLength;
+                base.queryData = options;
 
                 base.options.listeners.trigger("Indextank.AjaxSearch.searching");
                 base.$el.trigger("Indextank.AjaxSearch.searching");
@@ -71,25 +74,37 @@
                     url: base.ize.apiurl + "/v1/indexes/" + base.ize.indexName + "/search",
                     dataType: "jsonp",
                     data: { 
-                            "q": query, 
-                            "fetch": base.options.fields, 
-                            "snippet": base.options.snippets, 
-                            "function": base.options.scoringFunction,
-                            "start": start,
-                            "len": rsLength
+                            "q": options.query, 
+                            "fetch": options.fields, 
+                            "snippet": options.snippets, 
+                            "function": options.scoringFunction,
+                            "start": options.start,
+                            "len": options.rsLength
                           },
                     success: function( data ) { 
                                 // Indextank API does not send the query, nor start or rsLength
                                 // I'll save the current query inside 'data',
                                 // so our listeners can use it.
-                                data.query = query;
-                                data.start = start;
-                                data.rsLength = rsLength;
+                                data.queryData = options;
                                 base.options.listeners.trigger("Indextank.AjaxSearch.success", data);
                                 }
                 } );
             } 
-        
+    
+
+        // hacky way to tell if 2 queries look the same.
+        // it does not even check if everything on b is in a
+        base.areEqual = function( a, b) {
+
+            for (p in a) {
+                if (typeof(p) == "string" || typeof(p) == "number")
+                    if ( b[p] != a[p] ) return false;
+            }
+
+            return true; 
+
+        }
+    
         // Run initializer
         base.init();
     };
