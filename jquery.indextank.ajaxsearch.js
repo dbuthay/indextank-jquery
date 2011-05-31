@@ -79,6 +79,11 @@
                                 // I'll save the current query inside 'data',
                                 // so our listeners can use it.
                                 data.queryData = options;
+
+                                // hacky way to let other call us back.
+                                data.provider = base.$el;
+
+                                // let our listeners now that the search succeded.
                                 base.options.listeners.trigger("Indextank.AjaxSearch.success", data);
                                 }
                 } );
